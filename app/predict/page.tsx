@@ -66,7 +66,7 @@ export default function PredictPage() {
   const [predictionResult, setPredictionResult] = useState<K2PredictionResponse | KeplerPredictionResponse | MergedPredictionResponse | null>(null);
   
   // Batch prediction states
-  const [predictionMode, setPredictionMode] = useState<'single' | 'batch'>('single');
+  const [predictionMode, setPredictionMode] = useState<'single' | 'batch'>('batch');
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [batchResults, setBatchResults] = useState<BatchPredictionResponse | null>(null);
   const [batchProcessing, setBatchProcessing] = useState(false);
@@ -1384,7 +1384,7 @@ export default function PredictPage() {
         <Card className="border-0 bg-white/95 backdrop-blur-md shadow-2xl">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Sparkles className="h-5 w-5" />
+              {/* <Sparkles className="h-5 w-5" /> */}
               Planetary Parameters
             </CardTitle>
             <CardDescription>
@@ -1416,13 +1416,19 @@ export default function PredictPage() {
 
             {/* Tabs for Single vs Batch Prediction */}
             <Tabs value={predictionMode} onValueChange={(v) => setPredictionMode(v as 'single' | 'batch')} className="w-full">
-              <TabsList className="grid w-full grid-cols-2 mb-6">
-                <TabsTrigger value="single" className="flex items-center gap-2">
-                  <Sparkles className="h-4 w-4" />
+              <TabsList className="grid w-full grid-cols-2 mb-6 h-14 p-1 bg-gradient-to-r from-blue-100 to-indigo-100 border-2 border-primary/20">
+                <TabsTrigger 
+                  value="single" 
+                  className="flex items-center gap-2 text-base font-semibold data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 h-full"
+                >
+                  {/* <Sparkles className="h-5 w-5" /> */}
                   Single Prediction
                 </TabsTrigger>
-                <TabsTrigger value="batch" className="flex items-center gap-2">
-                  <Upload className="h-4 w-4" />
+                <TabsTrigger 
+                  value="batch" 
+                  className="flex items-center gap-2 text-base font-semibold data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 h-full"
+                >
+                  <Upload className="h-5 w-5" />
                   Batch CSV Upload
                 </TabsTrigger>
               </TabsList>
@@ -1530,23 +1536,39 @@ export default function PredictPage() {
 
             {/* File Upload Section */}
             <div className="space-y-4">
-              <div className="border-2 border-dashed border-muted rounded-lg p-8 text-center">
-                <Upload className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2">Upload CSV File</h3>
-                <p className="text-sm text-muted-foreground mb-4">
+              <div className="border-2 border-dashed border-primary/30 rounded-lg p-8 text-center bg-blue hover:border-primary/60 transition-all duration-300">
+                <Upload className="h-16 w-16 text-primary mx-auto mb-4 animate-bounce" />
+                <h3 className="text-xl font-bold mb-2 text-primary">Upload CSV File</h3>
+                <p className="text-sm text-muted-foreground mb-6">
                   Select a CSV file containing multiple rows for batch prediction
                 </p>
-                <Input
-                  type="file"
-                  accept=".csv"
-                  onChange={handleFileChange}
-                  className="max-w-md mx-auto"
-                />
+                
+                {/* Custom styled file input button */}
+                <div className="relative inline-block">
+                  <input
+                    type="file"
+                    accept=".csv"
+                    onChange={handleFileChange}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                    id="csv-upload"
+                  />
+                  <Button 
+                    size="lg"
+                    className="relative px-8 py-6 text-lg font-semibold bg-blue-500 hover:from-blue-700 hover:to-indigo-700 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105"
+                    asChild
+                  >
+                    <label htmlFor="csv-upload" className="cursor-pointer flex items-center gap-3">
+                      <FileText className="h-6 w-6" />
+                      {csvFile ? 'Change File' : 'Choose CSV File'}
+                    </label>
+                  </Button>
+                </div>
+
                 {csvFile && (
-                  <div className="mt-4 flex items-center justify-center gap-2 text-sm">
-                    <FileText className="h-4 w-4 text-green-600" />
-                    <span className="font-medium">{csvFile.name}</span>
-                    <Badge variant="outline">{(csvFile.size / 1024).toFixed(2)} KB</Badge>
+                  <div className="mt-6 flex items-center justify-center gap-2 text-sm bg-green-50 border border-green-200 rounded-lg p-3 animate-slide-in-bottom">
+                    <FileText className="h-5 w-5 text-green-600" />
+                    <span className="font-semibold text-green-700">{csvFile.name}</span>
+                    <Badge variant="outline" className="bg-white">{(csvFile.size / 1024).toFixed(2)} KB</Badge>
                   </div>
                 )}
               </div>
@@ -1579,7 +1601,7 @@ export default function PredictPage() {
                   </>
                 ) : (
                   <>
-                    <Sparkles className="h-5 w-5" />
+                    {/* <Sparkles className="h-5 w-5" /> */}
                     Run Batch Prediction
                   </>
                 )}

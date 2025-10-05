@@ -167,7 +167,7 @@ export default function DatasetsPage() {
       </div>
 
       {/* Header Section */}
-      <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 text-white py-16 px-4 relative z-10">
+      <div className=" text-white py-16 px-4 relative z-10">
         <div className="container mx-auto max-w-6xl">
           <div className="flex items-center gap-4 mb-4 animate-slide-in-top">
             <div className="p-3 bg-white/20 backdrop-blur-sm rounded-2xl">
@@ -176,8 +176,8 @@ export default function DatasetsPage() {
             <h1 className="text-5xl font-black">Datasets</h1>
           </div>
           <p className="text-xl text-blue-100 max-w-3xl animate-slide-in-bottom">
-            Access our comprehensive collection of exoplanet datasets from NASA's Kepler and K2 missions. 
-            Download high-quality data for research, analysis, and machine learning applications.
+            Access and Download high-quality data from our comprehensive collection of exoplanet datasets from NASA's Kepler and K2 missions. 
+             
           </p>
         </div>
       </div>
