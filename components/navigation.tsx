@@ -13,7 +13,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Rocket, LayoutDashboard, Search, History, LogOut, User } from 'lucide-react';
+import { Rocket, LayoutDashboard, Search, History, LogOut, User, Database } from 'lucide-react';
 
 export function Navigation() {
   const { user, profile, signOut } = useAuth();
@@ -30,23 +30,28 @@ export function Navigation() {
   const navItems = [
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/predict', label: 'New Prediction', icon: Rocket },
-    { href: '/catalog', label: 'Exoplanet Catalog', icon: Search },
+    { href: '/catalog', label: 'Datasets', icon: Database },
     { href: '/history', label: 'My History', icon: History },
   ];
 
   if (!user) return null;
 
   return (
-    <nav className="border-b bg-white/50 backdrop-blur-lg sticky top-0 z-50 glass animate-slide-in-top">
+    <nav className="border-b bg-white/95 backdrop-blur-lg sticky top-0 z-50 shadow-md">
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
-          <Link href="/dashboard" className="flex items-center gap-2 group hover-lift">
+          <Link href="/dashboard" className="flex items-center gap-3 group hover-lift">
             <div className="relative">
               <Rocket className="h-8 w-8 text-primary transition-transform group-hover:scale-110 animate-bounce" />
               <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full animate-glow-pulse" />
             </div>
-            <span className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent animate-gradient-shift">
-              ExoPlanet Discovery
+            <span className="text-2xl font-black relative">
+              <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                Terra
+              </span>
+              <span className="bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">
+                Finder
+              </span>
             </span>
           </Link>
 
@@ -78,7 +83,7 @@ export function Navigation() {
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56 glass animate-scale-in">
+              <DropdownMenuContent align="end" className="w-56 bg-white border-2 shadow-lg animate-scale-in">
                 <DropdownMenuLabel>
                   <div className="flex flex-col space-y-1 animate-slide-in-top">
                     <p className="text-sm font-medium">{profile?.full_name || 'User'}</p>

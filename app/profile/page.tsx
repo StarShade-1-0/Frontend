@@ -3,7 +3,6 @@
 import React,{ useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
-import { Navigation } from '@/components/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -71,7 +70,7 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-orange-50">
-      <Navigation />
+      
 
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-40 right-20 w-96 h-96 bg-blue-400/5 rounded-full blur-3xl animate-pulse-glow" />
@@ -91,7 +90,7 @@ export default function ProfilePage() {
           </p>
         </div>
 
-        <Card className="border-0 bg-white/80 backdrop-blur-sm shadow-2xl">
+        <Card className="border-2 border-white/50 bg-white/98 backdrop-blur-lg shadow-2xl">
           <CardHeader>
             <CardTitle>Account Information</CardTitle>
             <CardDescription>Update your profile details</CardDescription>
@@ -156,7 +155,7 @@ export default function ProfilePage() {
           </CardContent>
         </Card>
 
-        <Card className="border-0 bg-white/60 backdrop-blur-sm shadow-lg mt-6">
+        <Card className="border-2 border-white/50 bg-white/98 backdrop-blur-lg shadow-2xl mt-6">
           <CardHeader>
             <CardTitle className="text-sm">Account Details</CardTitle>
           </CardHeader>

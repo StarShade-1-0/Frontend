@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
-import { Navigation } from '@/components/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -84,8 +83,8 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-orange-50 animate-gradient-shift">
-      <Navigation />
+    <div className="min-h-screen bg-transparent">
+      
 
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-40 right-20 w-96 h-96 bg-blue-400/5 rounded-full blur-3xl animate-glow-pulse" />
@@ -97,14 +96,18 @@ export default function Dashboard() {
 
       <div className="container mx-auto px-4 py-8 relative z-10">
         <div className="mb-8 animate-slide-in-top">
-          <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-blue-600 to-orange-500 bg-clip-text text-transparent animate-slide-in-blur neon-glow">
-            Welcome back, {profile?.full_name || 'Explorer'}!
+          <h1 className="text-4xl font-bold mb-2 bg-white/95 backdrop-blur-md px-6 py-3 rounded-lg inline-block shadow-lg">
+            <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+              Welcome back, {profile?.full_name || 'Explorer'}!
+            </span>
           </h1>
-          <p className="text-muted-foreground animate-slide-in-bottom stagger-1">Track your exoplanet discoveries and predictions</p>
+          {/* <p className="text-lg font-medium bg-white/90 backdrop-blur-sm px-6 py-2 rounded-lg inline-block mt-3 shadow-md">
+            Track your exoplanet discoveries and predictions
+          </p> */}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 animate-slide-in-bottom">
-          <Card className="border-0 bg-white/80 backdrop-blur-sm shadow-lg hover:shadow-xl transition-all hover-lift hover-glow glass animate-scale-in group" style={{ animationDelay: '0.1s' }}>
+          <Card className="border-2 bg-white bg-white/80 shadow-2xl hover:shadow-3xl transition-all hover-lift hover-glow group" style={{ animationDelay: '0.1s' }}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium group-hover:text-primary transition-colors duration-300">Total Predictions</CardTitle>
               <Rocket className="h-4 w-4 text-muted-foreground group-hover:animate-float group-hover:text-primary transition-all duration-300" />
@@ -115,7 +118,7 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
-          <Card className="border-0 bg-white/80 backdrop-blur-sm shadow-lg hover:shadow-xl transition-all hover-lift hover-glow glass animate-scale-in group" style={{ animationDelay: '0.2s' }}>
+          <Card className="border-2 bg-white/80 backdrop-blur-lg shadow-2xl hover:shadow-3xl transition-all hover-lift hover-glow group" style={{ animationDelay: '0.2s' }}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium group-hover:text-green-600 transition-colors duration-300">Confirmed Exoplanets</CardTitle>
               <CheckCircle2 className="h-4 w-4 text-green-600 group-hover:animate-heartbeat transition-all duration-300" />
@@ -126,7 +129,7 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
-          <Card className="border-0 bg-white/80 backdrop-blur-sm shadow-lg hover:shadow-xl transition-all hover-lift hover-glow glass animate-scale-in group" style={{ animationDelay: '0.3s' }}>
+          <Card className="border-2 bg-white/80 backdrop-blur-lg shadow-2xl hover:shadow-3xl transition-all hover-lift hover-glow group" style={{ animationDelay: '0.3s' }}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium group-hover:text-orange-600 transition-colors duration-300">Pending Analysis</CardTitle>
               <Clock className="h-4 w-4 text-orange-600 group-hover:animate-infinite-rotate transition-all duration-300" />
@@ -137,7 +140,7 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
-          <Card className="border-0 bg-white/80 backdrop-blur-sm shadow-lg hover:shadow-xl transition-all hover-lift hover-glow glass animate-scale-in group" style={{ animationDelay: '0.4s' }}>
+          <Card className="border-2  bg-white/80 backdrop-blur-lg shadow-2xl hover:shadow-3xl transition-all hover-lift hover-glow group" style={{ animationDelay: '0.4s' }}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium group-hover:text-red-600 transition-colors duration-300">Non-Exoplanets</CardTitle>
               <XCircle className="h-4 w-4 text-red-600 group-hover:animate-wobble transition-all duration-300" />
@@ -209,10 +212,10 @@ export default function Dashboard() {
                         )}
                       </div>
                       <div className="grid grid-cols-2 gap-2 text-sm text-muted-foreground">
-                        <div>Radius: {prediction.planet_radius?.toFixed(2)} R⊕</div>
-                        <div>Mass: {prediction.planet_mass?.toFixed(2)} M⊕</div>
+                        <div>Model: {prediction.model_used === 'model1' ? 'K2 RF' : prediction.model_used === 'model2' ? 'Kepler VS' : 'Merged LR'}</div>
+                        <div>Result: {prediction.prediction_result}</div>
                       </div>
-                      {prediction.confidence_score && (
+                      {prediction.confidence_score !== null && prediction.confidence_score !== undefined && (
                         <div className="mt-2 text-sm">
                           <span className="text-muted-foreground">Confidence: </span>
                           <span className="font-semibold text-primary">
