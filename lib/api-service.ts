@@ -295,3 +295,136 @@ export async function downloadMergedDataset(): Promise<Blob> {
     throw new Error('Failed to download dataset: Unknown error');
   }
 }
+
+// ============================================
+// BATCH PREDICTION TYPES AND FUNCTIONS
+// ============================================
+
+export interface BatchPredictionResult {
+  row_number: number;
+  prediction: string | number | null;
+  confidence: number | null;
+  class_probabilities: {
+    [key: string]: number;
+  } | null;
+  error: string | null;
+}
+
+export interface BatchPredictionResponse {
+  success: boolean;
+  total_rows: number;
+  successful_predictions: number;
+  failed_predictions: number;
+  warnings: string[];
+  errors: string[];
+  results: BatchPredictionResult[];
+}
+
+/**
+ * Call the K2 Stacking RF batch prediction endpoint
+ * @param file - CSV file containing multiple rows for batch prediction
+ * @returns Batch prediction response with results for each row
+ */
+export async function predictK2StackingRFBatch(
+  file: File
+): Promise<BatchPredictionResponse> {
+  const url = `${API_CONFIG.baseUrl}/k2/stacking_rf/predict_batch`;
+
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch(url, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(
+        errorData.detail || `API request failed with status ${response.status}`
+      );
+    }
+
+    const data: BatchPredictionResponse = await response.json();
+    return data;
+  } catch (error) {
+    if (error instanceof Error) {
+      throw new Error(`Failed to get batch predictions: ${error.message}`);
+    }
+    throw new Error('Failed to get batch predictions: Unknown error');
+  }
+}
+
+/**
+ * Call the Kepler Voting Soft batch prediction endpoint
+ * @param file - CSV file containing multiple rows for batch prediction
+ * @returns Batch prediction response with results for each row
+ */
+export async function predictKeplerVotingSoftBatch(
+  file: File
+): Promise<BatchPredictionResponse> {
+  const url = `${API_CONFIG.baseUrl}/kepler/voting_soft/predict_batch`;
+
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch(url, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(
+        errorData.detail || `API request failed with status ${response.status}`
+      );
+    }
+
+    const data: BatchPredictionResponse = await response.json();
+    return data;
+  } catch (error) {
+    if (error instanceof Error) {
+      throw new Error(`Failed to get batch predictions: ${error.message}`);
+    }
+    throw new Error('Failed to get batch predictions: Unknown error');
+  }
+}
+
+/**
+ * Call the Merged Stacking LogReg batch prediction endpoint
+ * @param file - CSV file containing multiple rows for batch prediction
+ * @returns Batch prediction response with results for each row
+ */
+export async function predictMergedStackingLogRegBatch(
+  file: File
+): Promise<BatchPredictionResponse> {
+  const url = `${API_CONFIG.baseUrl}/merged/stacking_logreg/predict_batch`;
+
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch(url, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(
+        errorData.detail || `API request failed with status ${response.status}`
+      );
+    }
+
+    const data: BatchPredictionResponse = await response.json();
+    return data;
+  } catch (error) {
+    if (error instanceof Error) {
+      throw new Error(`Failed to get batch predictions: ${error.message}`);
+    }
+    throw new Error('Failed to get batch predictions: Unknown error');
+  }
+}
+
