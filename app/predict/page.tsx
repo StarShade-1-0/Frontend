@@ -1,6 +1,6 @@
 'use client';
 
-import React,{ useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,6 +10,16 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { supabase } from '@/lib/supabase';
 import { 
   predictK2StackingRF, 
@@ -20,9 +30,25 @@ import {
   KeplerPredictionResponse,
   predictMergedStackingLogReg,
   MergedInferenceFeatures,
-  MergedPredictionResponse
+  MergedPredictionResponse,
+  predictK2StackingRFBatch,
+  predictKeplerVotingSoftBatch,
+  predictMergedStackingLogRegBatch,
+  BatchPredictionResponse
 } from '@/lib/api-service';
-import { Rocket, Sparkles, ArrowRight, Info, AlertCircle, CheckCircle2, XCircle } from 'lucide-react';
+import { 
+  Rocket, 
+  Sparkles, 
+  ArrowRight, 
+  Info, 
+  AlertCircle, 
+  CheckCircle2, 
+  XCircle, 
+  Upload, 
+  FileText,
+  Download,
+  Loader2
+} from 'lucide-react';
 import { toast } from 'sonner';
 import {
   Tooltip,
@@ -38,6 +64,12 @@ export default function PredictPage() {
   const [selectedModel, setSelectedModel] = useState<string>('model1');
   const [predictionError, setPredictionError] = useState<string | null>(null);
   const [predictionResult, setPredictionResult] = useState<K2PredictionResponse | KeplerPredictionResponse | MergedPredictionResponse | null>(null);
+  
+  // Batch prediction states
+  const [predictionMode, setPredictionMode] = useState<'single' | 'batch'>('single');
+  const [csvFile, setCsvFile] = useState<File | null>(null);
+  const [batchResults, setBatchResults] = useState<BatchPredictionResponse | null>(null);
+  const [batchProcessing, setBatchProcessing] = useState(false);
   
   // Separate form data for each model
   const [model1Data, setModel1Data] = useState({
@@ -455,6 +487,99 @@ export default function PredictPage() {
     } finally {
       setSubmitting(false);
     }
+  };
+
+  // Handle CSV file selection
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (!file.name.endsWith('.csv')) {
+        toast.error('Please select a CSV file');
+        return;
+      }
+      setCsvFile(file);
+      setBatchResults(null);
+      setPredictionError(null);
+      toast.success(`File "${file.name}" selected`);
+    }
+  };
+
+  // Handle batch prediction
+  const handleBatchPredict = async () => {
+    if (!csvFile) {
+      toast.error('Please select a CSV file');
+      return;
+    }
+
+    setBatchProcessing(true);
+    setPredictionError(null);
+    setBatchResults(null);
+
+    try {
+      let response: BatchPredictionResponse;
+
+      // Call appropriate batch endpoint based on selected model
+      if (selectedModel === 'model1') {
+        response = await predictK2StackingRFBatch(csvFile);
+      } else if (selectedModel === 'model2') {
+        response = await predictKeplerVotingSoftBatch(csvFile);
+      } else if (selectedModel === 'model3') {
+        response = await predictMergedStackingLogRegBatch(csvFile);
+      } else {
+        throw new Error('Invalid model selected');
+      }
+
+      setBatchResults(response);
+
+      // Show success/warning message
+      if (response.success) {
+        toast.success(`Batch prediction completed! ${response.successful_predictions} of ${response.total_rows} rows processed successfully.`);
+      } else {
+        toast.warning(`Batch prediction completed with errors. ${response.successful_predictions} succeeded, ${response.failed_predictions} failed.`);
+      }
+
+      // Show warnings if any
+      if (response.warnings.length > 0) {
+        response.warnings.forEach(warning => {
+          toast.warning(warning, { duration: 5000 });
+        });
+      }
+    } catch (error: any) {
+      console.error('Batch prediction error:', error);
+      setPredictionError(error.message || 'Failed to process batch prediction');
+      toast.error(error.message || 'Failed to process batch prediction');
+    } finally {
+      setBatchProcessing(false);
+    }
+  };
+
+  // Export batch results to CSV
+  const exportBatchResults = () => {
+    if (!batchResults) return;
+
+    const csvContent = [
+      // Header
+      ['Row', 'Prediction', 'Confidence', 'Error'].join(','),
+      // Data rows
+      ...batchResults.results.map(result => [
+        result.row_number,
+        result.prediction ?? 'N/A',
+        result.confidence !== null ? result.confidence.toFixed(4) : 'N/A',
+        result.error ? `"${result.error.replace(/"/g, '""')}"` : ''
+      ].join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `batch_predictions_${selectedModel}_${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+
+    toast.success('Results exported successfully!');
   };
 
   // Field definitions for Model 1 (K2 Stacking RF)
@@ -1247,7 +1372,7 @@ export default function PredictPage() {
           <span className="bg-gradient-to-r text-white bg-clip-text text-transparent">
             Terra
           </span>
-          <span className="bg-gradient-to-r text-blue-500 bg-clip-text text-transparent">
+          <span className="bg-gradient-to-r text-white text-transparent">
             Finder
           </span>
         </h1>
@@ -1267,38 +1392,53 @@ export default function PredictPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Error Alert */}
-              {predictionError && (
-                <Alert variant="destructive">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>{predictionError}</AlertDescription>
-                </Alert>
-              )}
+            {/* Model Selection - Outside of tabs so it applies to both modes */}
+            <div className="space-y-2 mb-6">
+              <Label htmlFor="model-select" className="text-base font-semibold">
+                Select ML Model
+              </Label>
+              <Select value={selectedModel} onValueChange={setSelectedModel}>
+                <SelectTrigger id="model-select" className="bg-white">
+                  <SelectValue placeholder="Choose a model" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="model1">Model 1 - K2 Stacking RF</SelectItem>
+                  <SelectItem value="model2">Model 2 - Kepler Voting Soft</SelectItem>
+                  <SelectItem value="model3">Model 3 - Merged Stacking LogReg</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-sm text-muted-foreground">
+                {selectedModel === 'model1' && 'Model 1: K2 Stacking Random Forest - Optimized for K2 mission transit and orbital parameters'}
+                {selectedModel === 'model2' && 'Model 2: Kepler Voting Soft - Comprehensive Kepler mission parameters with ensemble voting'}
+                {selectedModel === 'model3' && 'Model 3: Merged Stacking Logistic Regression - Combined dataset with core exoplanet parameters'}
+              </p>
+            </div>
 
-              {/* Model Selection */}
-              <div className="space-y-2">
-                <Label htmlFor="model-select" className="text-base font-semibold">
-                  Select ML Model
-                </Label>
-                <Select value={selectedModel} onValueChange={setSelectedModel}>
-                  <SelectTrigger id="model-select" className="bg-white">
-                    <SelectValue placeholder="Choose a model" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="model1">Model 1 - K2 Stacking RF</SelectItem>
-                    <SelectItem value="model2">Model 2 - Kepler Voting Soft</SelectItem>
-                    <SelectItem value="model3">Model 3 - Merged Stacking LogReg</SelectItem>
-                  </SelectContent>
-                </Select>
-                <p className="text-sm text-muted-foreground">
-                  {selectedModel === 'model1' && 'Model 1: K2 Stacking Random Forest - Optimized for K2 mission transit and orbital parameters'}
-                  {selectedModel === 'model2' && 'Model 2: Kepler Voting Soft - Comprehensive Kepler mission parameters with ensemble voting'}
-                  {selectedModel === 'model3' && 'Model 3: Merged Stacking Logistic Regression - Combined dataset with core exoplanet parameters'}
-                </p>
-              </div>
+            {/* Tabs for Single vs Batch Prediction */}
+            <Tabs value={predictionMode} onValueChange={(v) => setPredictionMode(v as 'single' | 'batch')} className="w-full">
+              <TabsList className="grid w-full grid-cols-2 mb-6">
+                <TabsTrigger value="single" className="flex items-center gap-2">
+                  <Sparkles className="h-4 w-4" />
+                  Single Prediction
+                </TabsTrigger>
+                <TabsTrigger value="batch" className="flex items-center gap-2">
+                  <Upload className="h-4 w-4" />
+                  Batch CSV Upload
+                </TabsTrigger>
+              </TabsList>
 
-              <div className="grid md:grid-cols-2 gap-6">
+              {/* Single Prediction Tab */}
+              <TabsContent value="single">
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  {/* Error Alert */}
+                  {predictionError && (
+                    <Alert variant="destructive">
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription>{predictionError}</AlertDescription>
+                    </Alert>
+                  )}
+
+                  <div className="grid md:grid-cols-2 gap-6">
                 <TooltipProvider>
                   {currentFields.map((field) => (
                     <div key={field.id} className="space-y-2">
@@ -1376,11 +1516,237 @@ export default function PredictPage() {
                 )}
               </Button>
             </form>
+          </TabsContent>
+
+          {/* Batch CSV Upload Tab */}
+          <TabsContent value="batch" className="space-y-6">
+            {/* Error Alert */}
+            {predictionError && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{predictionError}</AlertDescription>
+              </Alert>
+            )}
+
+            {/* File Upload Section */}
+            <div className="space-y-4">
+              <div className="border-2 border-dashed border-muted rounded-lg p-8 text-center">
+                <Upload className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-semibold mb-2">Upload CSV File</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Select a CSV file containing multiple rows for batch prediction
+                </p>
+                <Input
+                  type="file"
+                  accept=".csv"
+                  onChange={handleFileChange}
+                  className="max-w-md mx-auto"
+                />
+                {csvFile && (
+                  <div className="mt-4 flex items-center justify-center gap-2 text-sm">
+                    <FileText className="h-4 w-4 text-green-600" />
+                    <span className="font-medium">{csvFile.name}</span>
+                    <Badge variant="outline">{(csvFile.size / 1024).toFixed(2)} KB</Badge>
+                  </div>
+                )}
+              </div>
+
+              {/* CSV Format Information */}
+              <Alert>
+                <Info className="h-4 w-4" />
+                <AlertTitle>CSV Format Requirements</AlertTitle>
+                <AlertDescription>
+                  <ul className="list-disc list-inside text-sm space-y-1 mt-2">
+                    <li>File must be in CSV format (.csv extension)</li>
+                    <li>Column names must match the required feature names for the selected model</li>
+                    <li>Missing columns will be imputed automatically (warning will be shown)</li>
+                    <li>Extra columns will be ignored</li>
+                    <li>Each row will be processed independently</li>
+                  </ul>
+                </AlertDescription>
+              </Alert>
+
+              <Button
+                onClick={handleBatchPredict}
+                size="lg"
+                className="w-full gap-2"
+                disabled={!csvFile || batchProcessing}
+              >
+                {batchProcessing ? (
+                  <>
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    Processing Batch...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-5 w-5" />
+                    Run Batch Prediction
+                  </>
+                )}
+              </Button>
+            </div>
+
+            {/* Batch Results Display */}
+            {batchResults && (
+              <div className="space-y-4 mt-6">
+                {/* Summary Stats */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <Card>
+                    <CardContent className="pt-6">
+                      <div className="text-center">
+                        <p className="text-2xl font-bold">{batchResults.total_rows}</p>
+                        <p className="text-sm text-muted-foreground">Total Rows</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="pt-6">
+                      <div className="text-center">
+                        <p className="text-2xl font-bold text-green-600">{batchResults.successful_predictions}</p>
+                        <p className="text-sm text-muted-foreground">Successful</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="pt-6">
+                      <div className="text-center">
+                        <p className="text-2xl font-bold text-red-600">{batchResults.failed_predictions}</p>
+                        <p className="text-sm text-muted-foreground">Failed</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="pt-6">
+                      <div className="text-center">
+                        <p className="text-2xl font-bold text-yellow-600">{batchResults.warnings.length}</p>
+                        <p className="text-sm text-muted-foreground">Warnings</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Warnings Display */}
+                {batchResults.warnings.length > 0 && (
+                  <Alert>
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertTitle>Warnings ({batchResults.warnings.length})</AlertTitle>
+                    <AlertDescription>
+                      <ul className="list-disc list-inside text-sm space-y-1 mt-2">
+                        {batchResults.warnings.map((warning, idx) => (
+                          <li key={idx}>{warning}</li>
+                        ))}
+                      </ul>
+                    </AlertDescription>
+                  </Alert>
+                )}
+
+                {/* Errors Display */}
+                {batchResults.errors.length > 0 && (
+                  <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertTitle>Errors ({batchResults.errors.length})</AlertTitle>
+                    <AlertDescription>
+                      <ul className="list-disc list-inside text-sm space-y-1 mt-2">
+                        {batchResults.errors.slice(0, 5).map((error, idx) => (
+                          <li key={idx}>{error}</li>
+                        ))}
+                        {batchResults.errors.length > 5 && (
+                          <li className="font-semibold">...and {batchResults.errors.length - 5} more errors</li>
+                        )}
+                      </ul>
+                    </AlertDescription>
+                  </Alert>
+                )}
+
+                {/* Results Table */}
+                <Card>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <CardTitle>Prediction Results</CardTitle>
+                      <Button onClick={exportBatchResults} variant="outline" size="sm" className="gap-2">
+                        <Download className="h-4 w-4" />
+                        Export CSV
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="max-h-96 overflow-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Row #</TableHead>
+                            <TableHead>Prediction</TableHead>
+                            <TableHead>Confidence</TableHead>
+                            <TableHead>Status</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {batchResults.results.map((result) => {
+                            // Convert prediction to display text
+                            let displayPrediction = result.prediction;
+                            let badgeVariant: 'default' | 'secondary' = 'secondary';
+                            
+                            if (result.prediction !== null) {
+                              if (typeof result.prediction === 'number') {
+                                // Convert 1/0 to text
+                                displayPrediction = result.prediction === 1 ? 'Confirmed' : 'False Positive';
+                                badgeVariant = result.prediction === 1 ? 'default' : 'secondary';
+                              } else if (typeof result.prediction === 'string') {
+                                // Handle string predictions
+                                const pred = result.prediction.toLowerCase();
+                                badgeVariant = (pred === 'confirmed' || pred === 'candidate') ? 'default' : 'secondary';
+                              }
+                            }
+                            
+                            return (
+                            <TableRow key={result.row_number}>
+                              <TableCell className="font-medium">{result.row_number}</TableCell>
+                              <TableCell>
+                                {result.prediction !== null ? (
+                                  <Badge variant={badgeVariant}>
+                                    {displayPrediction}
+                                  </Badge>
+                                ) : (
+                                  <span className="text-muted-foreground">N/A</span>
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                {result.confidence !== null ? (
+                                  <span>{(result.confidence * 100).toFixed(2)}%</span>
+                                ) : (
+                                  <span className="text-muted-foreground">N/A</span>
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                {result.error ? (
+                                  <div className="flex items-center gap-2 text-red-600">
+                                    <XCircle className="h-4 w-4" />
+                                    <span className="text-xs" title={result.error}>Error</span>
+                                  </div>
+                                ) : (
+                                  <div className="flex items-center gap-2 text-green-600">
+                                    <CheckCircle2 className="h-4 w-4" />
+                                    <span className="text-xs">Success</span>
+                                  </div>
+                                )}
+                              </TableCell>
+                            </TableRow>
+                            );
+                          })}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
           </CardContent>
         </Card>
 
-        {/* Prediction Result Display */}
-        {predictionResult && (
+        {/* Prediction Result Display (Single Mode Only) */}
+        {predictionMode === 'single' && predictionResult && (
           <Card className="border-0 bg-white/95 backdrop-blur-md shadow-2xl mt-8">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
