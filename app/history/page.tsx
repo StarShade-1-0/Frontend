@@ -197,6 +197,11 @@ export default function HistoryPage() {
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
+                        {prediction.parameters?.prediction_type === 'batch' && (
+                          <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                            📊 Batch
+                          </Badge>
+                        )}
                         {prediction.prediction_result === 'pending' ? (
                           <Badge variant="outline" className="bg-orange-50">
                             <Clock className="h-3 w-3 mr-1" />
@@ -278,8 +283,13 @@ export default function HistoryPage() {
       <Dialog open={!!selectedPrediction} onOpenChange={() => setSelectedPrediction(null)}>
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-2xl flex items-center gap-2">
+            <DialogTitle className="text-2xl flex items-center gap-2 flex-wrap">
               {selectedPrediction?.planet_name || 'Unnamed Planet'}
+              {selectedPrediction?.parameters?.prediction_type === 'batch' && (
+                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                  📊 Batch Prediction
+                </Badge>
+              )}
               {selectedPrediction?.prediction_result === 'pending' ? (
                 <Badge variant="outline" className="bg-orange-50">
                   <Clock className="h-3 w-3 mr-1" />
@@ -298,6 +308,18 @@ export default function HistoryPage() {
               )}
             </DialogTitle>
             <DialogDescription>
+              {selectedPrediction?.parameters?.prediction_type === 'batch' && (
+                <div className="mb-2">
+                  <span className="font-semibold">Batch File: </span>
+                  {selectedPrediction.parameters.batch_file || 'Unknown'}
+                  {selectedPrediction.parameters.row_number && (
+                    <span className="ml-2">
+                      <span className="font-semibold">Row: </span>
+                      {selectedPrediction.parameters.row_number}
+                    </span>
+                  )}
+                </div>
+              )}
               Submitted on{' '}
               {selectedPrediction &&
                 new Date(selectedPrediction.created_at).toLocaleDateString('en-US', {

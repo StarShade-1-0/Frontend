@@ -531,6 +531,49 @@ export default function PredictPage() {
 
       setBatchResults(response);
 
+      // Save successful predictions to database
+      if (response.results && response.results.length > 0) {
+        const successfulPredictions = response.results.filter(
+          result => result.prediction !== null && !result.error
+        );
+
+        if (successfulPredictions.length > 0) {
+          try {
+            const predictionsToSave = successfulPredictions.map(result => ({
+              user_id: user!.id,
+              planet_name: `Batch ${csvFile.name} - Row ${result.row_number}`,
+              model_used: selectedModel,
+              prediction_result: typeof result.prediction === 'number' 
+                ? (result.prediction === 1 ? 'Confirmed' : 'False Positive')
+                : (result.prediction as string),
+              confidence_score: result.confidence,
+              is_exoplanet: typeof result.prediction === 'number' 
+                ? result.prediction === 1 
+                : (result.prediction?.toLowerCase() === 'confirmed' || result.prediction?.toLowerCase() === 'candidate'),
+              parameters: {
+                batch_file: csvFile.name,
+                row_number: result.row_number,
+                prediction_type: 'batch'
+              },
+              notes: `Batch prediction from ${csvFile.name}`
+            }));
+
+            const { error: dbError } = await supabase
+              .from('predictions')
+              .insert(predictionsToSave);
+
+            if (dbError) {
+              console.error('Error saving batch predictions to database:', dbError);
+              toast.warning('Predictions completed but some results failed to save to history');
+            } else {
+              toast.success(`${successfulPredictions.length} predictions saved to history!`);
+            }
+          } catch (saveError) {
+            console.error('Error preparing batch predictions for save:', saveError);
+          }
+        }
+      }
+
       // Show success/warning message
       if (response.success) {
         toast.success(`Batch prediction completed! ${response.successful_predictions} of ${response.total_rows} rows processed successfully.`);
