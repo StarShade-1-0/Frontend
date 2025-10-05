@@ -140,8 +140,12 @@ export default function DatasetsPage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center p-4">
-        <Card className="max-w-md">
+      <div className="min-h-screen bg-transparent flex items-center justify-center p-4">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-40 right-20 w-96 h-96 bg-blue-400/5 rounded-full blur-3xl animate-glow-pulse" />
+          <div className="absolute bottom-40 left-20 w-96 h-96 bg-orange-400/5 rounded-full blur-3xl animate-float" />
+        </div>
+        <Card className="max-w-md relative z-10">
           <CardHeader>
             <CardTitle>Authentication Required</CardTitle>
             <CardDescription>Please sign in to access datasets</CardDescription>
@@ -152,9 +156,18 @@ export default function DatasetsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+    <div className="min-h-screen bg-transparent">
+      {/* Animated Background */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-40 right-20 w-96 h-96 bg-blue-400/5 rounded-full blur-3xl animate-glow-pulse" />
+        <div className="absolute bottom-40 left-20 w-96 h-96 bg-orange-400/5 rounded-full blur-3xl animate-float" />
+        <div className="absolute top-20 left-10 w-4 h-4 bg-primary/30 rounded-full animate-ping" />
+        <div className="absolute bottom-20 right-10 w-2 h-2 bg-accent/40 rounded-full animate-bounce" style={{ animationDelay: '1s' }} />
+        <div className="absolute top-1/3 left-1/4 w-3 h-3 bg-blue-400/30 rounded-full animate-pulse" style={{ animationDelay: '2s' }} />
+      </div>
+
       {/* Header Section */}
-      <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 text-white py-16 px-4">
+      <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 text-white py-16 px-4 relative z-10">
         <div className="container mx-auto max-w-6xl">
           <div className="flex items-center gap-4 mb-4 animate-slide-in-top">
             <div className="p-3 bg-white/20 backdrop-blur-sm rounded-2xl">
@@ -170,7 +183,7 @@ export default function DatasetsPage() {
       </div>
 
       {/* Info Alert */}
-      <div className="container mx-auto max-w-6xl px-4 -mt-8 mb-8 animate-slide-in-bottom">
+      <div className="container mx-auto max-w-6xl px-4 -mt-8 mb-8 animate-slide-in-bottom relative z-10">
         <Alert className="bg-white border-blue-200 shadow-lg">
           <AlertCircle className="h-4 w-4 text-blue-600" />
           <AlertTitle className="text-blue-900">Dataset Information</AlertTitle>
@@ -182,7 +195,7 @@ export default function DatasetsPage() {
       </div>
 
       {/* Datasets Grid */}
-      <div className="container mx-auto max-w-6xl px-4 pb-16">
+      <div className="container mx-auto max-w-6xl px-4 pb-16 relative z-10">
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {datasets.map((dataset, index) => (
             <Card 
