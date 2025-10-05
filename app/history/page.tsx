@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
-import { Navigation } from '@/components/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -98,8 +97,8 @@ export default function HistoryPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-orange-50">
-      <Navigation />
+    <div className="min-h-screen bg-transparent">
+      
 
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-40 right-20 w-96 h-96 bg-blue-400/5 rounded-full blur-3xl animate-pulse-glow" />
@@ -111,10 +110,10 @@ export default function HistoryPage() {
           <div className="flex items-center justify-center gap-2 mb-4">
             <History className="h-10 w-10 text-primary animate-float" />
           </div>
-          <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-blue-600 to-orange-500 bg-clip-text text-transparent">
+          <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r text-white bg-clip-text text-transparent">
             Prediction History
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground text-white">
             Review all your exoplanet predictions and their results
           </p>
         </div>

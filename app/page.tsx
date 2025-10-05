@@ -79,7 +79,7 @@ export default function Home() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-orange-50">
+    <div className="min-h-screen bg-transparent">
       {/* Simple floating background elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-10 w-72 h-72 bg-blue-400/10 rounded-full blur-3xl animate-float" />
@@ -91,26 +91,34 @@ export default function Home() {
       <div className="container mx-auto px-4 py-12 relative z-10">
         {/* Header */}
         <div className="text-center mb-12 animate-slide-up">
-          <div className="flex items-center justify-center gap-3 mb-4">
+          <div className="flex items-center justify-center gap-3 mb-6">
             <div className="animate-float">
-              <Rocket className="h-16 w-16 text-primary hover-scale cursor-pointer transition-transform duration-300" />
+              <Rocket className="h-20 w-20 text-primary hover-scale cursor-pointer transition-transform duration-300" />
             </div>
           </div>
-          <h1 className="text-5xl md:text-7xl font-bold mb-4 bg-gradient-to-r from-blue-600 via-blue-500 to-orange-500 bg-clip-text text-transparent">
-            ExoPlanet Discovery
+          <h1 className="text-6xl md:text-8xl font-black mb-6 relative">
+            <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+              Terra
+            </span>
+            <span className="bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">
+              Finder
+            </span>
           </h1>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto animate-slide-up delay-200">
-            NASA Space Apps Challenge - Identify and analyze exoplanets using cutting-edge machine learning technology
+          <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto animate-slide-up delay-200 font-medium">
+            Discover New Worlds with AI-Powered Exoplanet Detection
+          </p>
+          <p className="text-sm text-muted-foreground/70 mt-2 animate-slide-up delay-300">
+            NASA Space Apps Challenge - Advanced Machine Learning for Planetary Discovery
           </p>
         </div>
 
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Left Column - Form */}
           <div className="order-2 lg:order-1">
-            <Card className="shadow-2xl border-0 bg-white/80 backdrop-blur-sm hover-lift transition-all duration-300 glass">
+            <Card className="shadow-2xl border-2 border-white/50 bg-white/98 backdrop-blur-lg hover-lift transition-all duration-300">
               <CardHeader>
                 <CardTitle className="text-2xl animate-slide-up">Get Started</CardTitle>
-                <CardDescription className="animate-slide-up delay-100">Sign in or create an account to begin your exoplanet journey</CardDescription>
+                <CardDescription className="animate-slide-up delay-100">Sign in or create an account to begin your journey</CardDescription>
               </CardHeader>
               <CardContent>
                 <Tabs value={isSignUp ? 'signup' : 'signin'} onValueChange={(v) => setIsSignUp(v === 'signup')}>
@@ -224,7 +232,7 @@ export default function Home() {
               {features.map((feature, index) => (
                 <div
                   key={index}
-                  className={`flex gap-4 p-4 rounded-lg bg-white/50 hover-lift transition-all duration-300 animate-slide-up delay-${(index + 4) * 100}`}
+                  className={`flex gap-4 p-4 rounded-lg bg-white/98 backdrop-blur-lg border-2 border-white/50 shadow-2xl hover-lift transition-all duration-300 animate-slide-up delay-${(index + 4) * 100}`}
                 >
                   <div className="flex-shrink-0">
                     <feature.icon className="h-6 w-6 text-primary animate-bounce" />

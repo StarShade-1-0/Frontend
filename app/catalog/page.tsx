@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
-import { Navigation } from '@/components/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -111,8 +110,8 @@ export default function CatalogPage() {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-orange-50 animate-gradient-shift">
-      <Navigation />
+    <div className="min-h-screen bg-transparent">
+      {/* <Navigation /> */}
 
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-40 left-20 w-96 h-96 bg-blue-400/5 rounded-full blur-3xl animate-glow-pulse" />
