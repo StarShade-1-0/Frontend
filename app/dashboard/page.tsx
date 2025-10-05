@@ -212,10 +212,10 @@ export default function Dashboard() {
                         )}
                       </div>
                       <div className="grid grid-cols-2 gap-2 text-sm text-muted-foreground">
-                        <div>Radius: {prediction.planet_radius?.toFixed(2)} R⊕</div>
-                        <div>Mass: {prediction.planet_mass?.toFixed(2)} M⊕</div>
+                        <div>Model: {prediction.model_used === 'model1' ? 'K2 RF' : prediction.model_used === 'model2' ? 'Kepler VS' : 'Merged LR'}</div>
+                        <div>Result: {prediction.prediction_result}</div>
                       </div>
-                      {prediction.confidence_score && (
+                      {prediction.confidence_score !== null && prediction.confidence_score !== undefined && (
                         <div className="mt-2 text-sm">
                           <span className="text-muted-foreground">Confidence: </span>
                           <span className="font-semibold text-primary">

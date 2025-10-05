@@ -5,6 +5,7 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
+// User profile information
 export interface Profile {
   id: string;
   full_name: string;
@@ -14,42 +15,30 @@ export interface Profile {
   updated_at: string;
 }
 
-export interface Exoplanet {
-  id: string;
-  name: string;
-  host_star: string;
-  discovery_method: string;
-  discovery_year: number;
-  orbital_period: number;
-  planet_radius: number;
-  planet_mass: number;
-  semi_major_axis: number;
-  eccentricity: number;
-  equilibrium_temperature: number;
-  stellar_magnitude: number;
-  distance_from_earth: number;
-  habitable_zone: boolean;
-  description: string;
-  created_at: string;
-}
-
+// Prediction history from ML models
 export interface Prediction {
   id: string;
   user_id: string;
   planet_name: string;
-  orbital_period: number;
-  planet_radius: number;
-  planet_mass: number;
-  semi_major_axis: number;
-  eccentricity: number;
-  stellar_magnitude: number;
-  transit_depth: number;
-  transit_duration: number;
-  stellar_temperature: number;
-  prediction_result: string;
-  confidence_score: number;
-  is_exoplanet: boolean;
+  model_used: 'model1' | 'model2' | 'model3'; // ML model identifier
+  prediction_result: string; // Result from backend (e.g., "Candidate", "False Positive", "Confirmed")
+  confidence_score: number | null; // 0-1 confidence score
+  is_exoplanet: boolean; // Whether predicted as exoplanet
+  parameters: Record<string, any>; // JSONB - all model parameters used
   notes: string;
   created_at: string;
   updated_at: string;
 }
+
+// Helper type for creating new predictions
+export interface CreatePrediction {
+  user_id: string;
+  planet_name: string;
+  model_used: 'model1' | 'model2' | 'model3';
+  prediction_result: string;
+  confidence_score: number | null;
+  is_exoplanet: boolean;
+  parameters: Record<string, any>;
+  notes?: string;
+}
+

@@ -217,30 +217,34 @@ export default function HistoryPage() {
                     </div>
 
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3 text-sm">
-                      {prediction.planet_radius && (
+                      {prediction.model_used && (
                         <div>
-                          <span className="text-muted-foreground">Radius: </span>
-                          <span className="font-semibold">{prediction.planet_radius.toFixed(2)} R⊕</span>
+                          <span className="text-muted-foreground">Model: </span>
+                          <span className="font-semibold">
+                            {prediction.model_used === 'model1' ? 'K2 RF' : 
+                             prediction.model_used === 'model2' ? 'Kepler VS' : 
+                             'Merged LR'}
+                          </span>
                         </div>
                       )}
-                      {prediction.planet_mass && (
+                      {prediction.prediction_result && (
                         <div>
-                          <span className="text-muted-foreground">Mass: </span>
-                          <span className="font-semibold">{prediction.planet_mass.toFixed(2)} M⊕</span>
+                          <span className="text-muted-foreground">Result: </span>
+                          <span className="font-semibold">{prediction.prediction_result}</span>
                         </div>
                       )}
-                      {prediction.orbital_period && (
-                        <div>
-                          <span className="text-muted-foreground">Period: </span>
-                          <span className="font-semibold">{prediction.orbital_period.toFixed(2)} days</span>
-                        </div>
-                      )}
-                      {prediction.confidence_score && (
+                      {prediction.confidence_score !== null && prediction.confidence_score !== undefined && (
                         <div>
                           <span className="text-muted-foreground">Confidence: </span>
                           <span className="font-semibold text-primary">
                             {(prediction.confidence_score * 100).toFixed(1)}%
                           </span>
+                        </div>
+                      )}
+                      {prediction.parameters && Object.keys(prediction.parameters).length > 0 && (
+                        <div>
+                          <span className="text-muted-foreground">Parameters: </span>
+                          <span className="font-semibold">{Object.keys(prediction.parameters).length}</span>
                         </div>
                       )}
                     </div>
@@ -308,7 +312,20 @@ export default function HistoryPage() {
 
           {selectedPrediction && (
             <div className="space-y-6">
-              {selectedPrediction.confidence_score && (
+              {/* Model Information */}
+              <div className="p-4 rounded-lg bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-100">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-semibold">ML Model Used</span>
+                  <span className="text-lg font-bold text-primary">
+                    {selectedPrediction.model_used === 'model1' ? 'K2 Stacking RF' : 
+                     selectedPrediction.model_used === 'model2' ? 'Kepler Voting Soft' : 
+                     'Merged Stacking LogReg'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Confidence Score */}
+              {selectedPrediction.confidence_score !== null && selectedPrediction.confidence_score !== undefined && (
                 <div className="p-4 rounded-lg bg-blue-50 border border-blue-100">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-semibold">Prediction Confidence</span>
@@ -325,62 +342,26 @@ export default function HistoryPage() {
                 </div>
               )}
 
-              <div className="grid grid-cols-2 gap-4">
-                {selectedPrediction.orbital_period && (
-                  <div className="space-y-1">
-                    <p className="text-sm text-muted-foreground">Orbital Period</p>
-                    <p className="font-semibold">{selectedPrediction.orbital_period.toFixed(2)} days</p>
+              {/* Parameters Used */}
+              {selectedPrediction.parameters && Object.keys(selectedPrediction.parameters).length > 0 && (
+                <div className="space-y-3">
+                  <h4 className="text-sm font-semibold text-muted-foreground">Parameters Used in Prediction</h4>
+                  <div className="grid grid-cols-2 gap-4 p-4 rounded-lg bg-muted/30 border max-h-96 overflow-y-auto">
+                    {Object.entries(selectedPrediction.parameters)
+                      .sort(([keyA], [keyB]) => keyA.localeCompare(keyB))
+                      .map(([key, value]) => (
+                        <div key={key} className="space-y-1">
+                          <p className="text-xs text-muted-foreground capitalize">
+                            {key.replace(/_/g, ' ')}
+                          </p>
+                          <p className="font-semibold text-sm">
+                            {typeof value === 'number' ? value.toFixed(4) : String(value)}
+                          </p>
+                        </div>
+                      ))}
                   </div>
-                )}
-                {selectedPrediction.planet_radius && (
-                  <div className="space-y-1">
-                    <p className="text-sm text-muted-foreground">Planet Radius</p>
-                    <p className="font-semibold">{selectedPrediction.planet_radius.toFixed(2)} R⊕</p>
-                  </div>
-                )}
-                {selectedPrediction.planet_mass && (
-                  <div className="space-y-1">
-                    <p className="text-sm text-muted-foreground">Planet Mass</p>
-                    <p className="font-semibold">{selectedPrediction.planet_mass.toFixed(2)} M⊕</p>
-                  </div>
-                )}
-                {selectedPrediction.semi_major_axis && (
-                  <div className="space-y-1">
-                    <p className="text-sm text-muted-foreground">Semi-Major Axis</p>
-                    <p className="font-semibold">{selectedPrediction.semi_major_axis.toFixed(3)} AU</p>
-                  </div>
-                )}
-                {selectedPrediction.eccentricity && (
-                  <div className="space-y-1">
-                    <p className="text-sm text-muted-foreground">Eccentricity</p>
-                    <p className="font-semibold">{selectedPrediction.eccentricity.toFixed(3)}</p>
-                  </div>
-                )}
-                {selectedPrediction.stellar_magnitude && (
-                  <div className="space-y-1">
-                    <p className="text-sm text-muted-foreground">Stellar Magnitude</p>
-                    <p className="font-semibold">{selectedPrediction.stellar_magnitude.toFixed(2)}</p>
-                  </div>
-                )}
-                {selectedPrediction.transit_depth && (
-                  <div className="space-y-1">
-                    <p className="text-sm text-muted-foreground">Transit Depth</p>
-                    <p className="font-semibold">{selectedPrediction.transit_depth.toFixed(3)}%</p>
-                  </div>
-                )}
-                {selectedPrediction.transit_duration && (
-                  <div className="space-y-1">
-                    <p className="text-sm text-muted-foreground">Transit Duration</p>
-                    <p className="font-semibold">{selectedPrediction.transit_duration.toFixed(2)} hours</p>
-                  </div>
-                )}
-                {selectedPrediction.stellar_temperature && (
-                  <div className="space-y-1">
-                    <p className="text-sm text-muted-foreground">Stellar Temperature</p>
-                    <p className="font-semibold">{selectedPrediction.stellar_temperature.toFixed(0)} K</p>
-                  </div>
-                )}
-              </div>
+                </div>
+              )}
 
               {selectedPrediction.notes && (
                 <div className="space-y-2">

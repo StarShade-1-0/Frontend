@@ -97,17 +97,17 @@ export default function Home() {
             </div>
           </div>
           <h1 className="text-6xl md:text-8xl font-black mb-6 relative">
-            <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r text-white bg-clip-text text-transparent">
               Terra
             </span>
-            <span className="bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-blue-500 to-blue-500 bg-clip-text text-transparent">
               Finder
             </span>
           </h1>
-          <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto animate-slide-up delay-200 font-medium">
+          <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto animate-slide-up delay-200 font-medium text-white">
             Discover New Worlds with AI-Powered Exoplanet Detection
           </p>
-          <p className="text-sm text-muted-foreground/70 mt-2 animate-slide-up delay-300">
+          <p className="text-sm text-muted-foreground/70 mt-2 animate-slide-up delay-300 text-white">
             NASA Space Apps Challenge - Advanced Machine Learning for Planetary Discovery
           </p>
         </div>
@@ -115,7 +115,7 @@ export default function Home() {
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Left Column - Form */}
           <div className="order-2 lg:order-1">
-            <Card className="shadow-2xl border-2 border-white/50 bg-white/98 backdrop-blur-lg hover-lift transition-all duration-300">
+            <Card className="shadow-2xl border-2 border-white/50 bg-white/80  hover-lift transition-all duration-300">
               <CardHeader>
                 <CardTitle className="text-2xl animate-slide-up">Get Started</CardTitle>
                 <CardDescription className="animate-slide-up delay-100">Sign in or create an account to begin your journey</CardDescription>
@@ -222,8 +222,8 @@ export default function Home() {
           {/* Right Column - Features */}
           <div className="order-1 lg:order-2 space-y-8">
             <div className="animate-slide-up delay-300">
-              <h2 className="text-3xl font-bold mb-6">Start Your Journey</h2>
-              <p className="text-muted-foreground mb-8">
+              <h2 className="text-3xl font-bold mb-6 text-white">Start Your Journey</h2>
+              <p className="text-muted-foreground mb-8 text-white">
                 Join thousands of space enthusiasts in discovering and analyzing exoplanets using our advanced tools and NASA data.
               </p>
             </div>
@@ -232,7 +232,7 @@ export default function Home() {
               {features.map((feature, index) => (
                 <div
                   key={index}
-                  className={`flex gap-4 p-4 rounded-lg bg-white/98 backdrop-blur-lg border-2 border-white/50 shadow-2xl hover-lift transition-all duration-300 animate-slide-up delay-${(index + 4) * 100}`}
+                  className={`flex gap-4 p-4 rounded-lg bg-white/80 border-2 border-white/50 shadow-2xl hover-lift transition-all duration-300 animate-slide-up delay-${(index + 4) * 100}`}
                 >
                   <div className="flex-shrink-0">
                     <feature.icon className="h-6 w-6 text-primary animate-bounce" />
@@ -249,7 +249,7 @@ export default function Home() {
 
         {/* Stats Section */}
         <div className="mt-24 text-center">
-          <h2 className="text-3xl font-bold mb-12 animate-slide-up">By the Numbers</h2>
+          <h2 className="text-3xl font-bold mb-12 animate-slide-up text-white">By the Numbers</h2>
           <div className="grid md:grid-cols-4 gap-8">
             {[
               { number: "5,000+", label: "Confirmed Planets" },

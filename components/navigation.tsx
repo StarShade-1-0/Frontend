@@ -13,7 +13,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Rocket, LayoutDashboard, Search, History, LogOut, User } from 'lucide-react';
+import { Rocket, LayoutDashboard, Search, History, LogOut, User, Database } from 'lucide-react';
 
 export function Navigation() {
   const { user, profile, signOut } = useAuth();
@@ -30,7 +30,7 @@ export function Navigation() {
   const navItems = [
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/predict', label: 'New Prediction', icon: Rocket },
-    { href: '/catalog', label: 'Exoplanet Catalog', icon: Search },
+    { href: '/catalog', label: 'Datasets', icon: Database },
     { href: '/history', label: 'My History', icon: History },
   ];
 
@@ -83,7 +83,7 @@ export function Navigation() {
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56 glass animate-scale-in">
+              <DropdownMenuContent align="end" className="w-56 bg-white border-2 shadow-lg animate-scale-in">
                 <DropdownMenuLabel>
                   <div className="flex flex-col space-y-1 animate-slide-in-top">
                     <p className="text-sm font-medium">{profile?.full_name || 'User'}</p>

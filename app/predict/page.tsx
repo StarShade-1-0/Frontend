@@ -208,7 +208,18 @@ export default function PredictPage() {
         const isExoplanet = apiResponse.prediction.toLowerCase() === 'candidate' || 
                            apiResponse.prediction.toLowerCase() === 'confirmed';
         
-        const { error: dbError } = await supabase.from('predictions').insert({
+        console.log('💾 Attempting to save to database:', {
+          user_id: user!.id,
+          planet_name: currentData.planet_name,
+          model_used: selectedModel,
+          prediction_result: apiResponse.prediction,
+          confidence_score: apiResponse.confidence,
+          is_exoplanet: isExoplanet,
+          parameters: features,
+          notes: currentData.notes,
+        });
+
+        const { data: insertData, error: dbError } = await supabase.from('predictions').insert({
           user_id: user!.id,
           planet_name: currentData.planet_name,
           model_used: selectedModel,
@@ -220,12 +231,12 @@ export default function PredictPage() {
         });
 
         if (dbError) {
-          // console.error('Database error:', dbError);
-          // Don't throw - we still got the prediction, just log the error
+          console.error('❌ Database error:', dbError);
           toast.warning('Prediction successful but failed to save to history');
+        } else {
+          console.log('✅ Successfully saved to database:', insertData);
+          toast.success(`Prediction completed! Result: ${apiResponse.prediction} (${(apiResponse.confidence * 100).toFixed(1)}% confidence)`);
         }
-        
-        toast.success(`Prediction completed! Result: ${apiResponse.prediction} (${(apiResponse.confidence * 100).toFixed(1)}% confidence)`);
       } else if (selectedModel === 'model2') {
         // Model 2: Kepler Voting Soft
         // Validate that all required numeric fields are filled
@@ -312,7 +323,18 @@ export default function PredictPage() {
         const isExoplanet = apiResponse.prediction.toLowerCase() === 'candidate' || 
                            apiResponse.prediction.toLowerCase() === 'confirmed';
         
-        const { error: dbError } = await supabase.from('predictions').insert({
+        console.log('💾 Attempting to save to database (Model 2):', {
+          user_id: user!.id,
+          planet_name: currentData.planet_name,
+          model_used: selectedModel,
+          prediction_result: apiResponse.prediction,
+          confidence_score: apiResponse.confidence,
+          is_exoplanet: isExoplanet,
+          parameters: features,
+          notes: currentData.notes,
+        });
+
+        const { data: insertData, error: dbError } = await supabase.from('predictions').insert({
           user_id: user!.id,
           planet_name: currentData.planet_name,
           model_used: selectedModel,
@@ -324,9 +346,10 @@ export default function PredictPage() {
         });
 
         if (dbError) {
-          // console.error('Database error:', dbError);
-          // Don't throw - we still got the prediction, just log the error
+          console.error('❌ Database error (Model 2):', dbError);
           toast.warning('Prediction successful but failed to save to history');
+        } else {
+          console.log('✅ Successfully saved to database (Model 2):', insertData);
         }
         
         const confidenceText = apiResponse.confidence !== null ? ` (${(apiResponse.confidence * 100).toFixed(1)}% confidence)` : '';
@@ -390,7 +413,18 @@ export default function PredictPage() {
         
         console.log(`🎯 Prediction: ${predictionLabel} (${apiResponse.prediction})`);
 
-        const { error: dbError } = await supabase.from('predictions').insert({
+        console.log('💾 Attempting to save to database (Model 3):', {
+          user_id: user!.id,
+          planet_name: currentData.planet_name,
+          model_used: selectedModel,
+          prediction_result: predictionLabel,
+          confidence_score: apiResponse.confidence,
+          is_exoplanet: isExoplanet,
+          parameters: features,
+          notes: currentData.notes,
+        });
+
+        const { data: insertData, error: dbError } = await supabase.from('predictions').insert({
           user_id: user!.id,
           planet_name: currentData.planet_name,
           model_used: selectedModel,
@@ -402,11 +436,10 @@ export default function PredictPage() {
         });
 
         if (dbError) {
-          // console.error('Database error:', dbError);
-          // Don't throw - we still got the prediction, just log the error
+          console.error('❌ Database error (Model 3):', dbError);
           toast.warning('Prediction successful but failed to save to history');
         } else {
-          console.log('✅ Saved to database');
+          console.log('✅ Successfully saved to database (Model 3):', insertData);
         }
         
         const confidenceText = apiResponse.confidence !== null ? ` (${(apiResponse.confidence * 100).toFixed(1)}% confidence)` : '';
