@@ -6,6 +6,8 @@ export const API_CONFIG = {
     k2Dataset: '/k2/dataset',
     keplerVotingSoft: '/kepler/voting_soft/predict',
     keplerDataset: '/kepler/dataset',
+    mergedStackingLogReg: '/merged/stacking_logreg/predict',
+    mergedDataset: '/merged/dataset',
   },
 };
 

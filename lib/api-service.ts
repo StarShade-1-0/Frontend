@@ -75,6 +75,26 @@ export interface KeplerInferenceFeatures {
   koi_fwm_stat_sig: number;
 }
 
+export interface MergedInferenceFeatures {
+  orbital_period: number;
+  transit_duration: number;
+  transit_duration_err1: number;
+  transit_duration_err2: number;
+  transit_depth: number;
+  transit_depth_err1: number;
+  transit_depth_err2: number;
+  planet_radius: number;
+  planet_radius_err1: number;
+  planet_radius_err2: number;
+  equi_temp: number;
+  stellar_temp: number;
+  stellar_temp_err1: number;
+  stellar_temp_err2: number;
+  stellar_radius: number;
+  stellar_radius_err1: number;
+  stellar_radius_err2: number;
+}
+
 export interface K2PredictionResponse {
   prediction: string;
   confidence: number;
@@ -85,6 +105,14 @@ export interface K2PredictionResponse {
 
 export interface KeplerPredictionResponse {
   prediction: string;
+  confidence: number | null;
+  class_probabilities: {
+    [key: string]: number;
+  } | null;
+}
+
+export interface MergedPredictionResponse {
+  prediction: number; // 0 or 1
   confidence: number | null;
   class_probabilities: {
     [key: string]: number;
@@ -192,6 +220,65 @@ export async function predictKeplerVotingSoft(
  */
 export async function downloadKeplerDataset(): Promise<Blob> {
   const url = `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.keplerDataset}`;
+
+  try {
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error(`Failed to download dataset: ${response.status}`);
+    }
+
+    return await response.blob();
+  } catch (error) {
+    if (error instanceof Error) {
+      throw new Error(`Failed to download dataset: ${error.message}`);
+    }
+    throw new Error('Failed to download dataset: Unknown error');
+  }
+}
+
+/**
+ * Call the Merged Stacking Logistic Regression model prediction endpoint
+ * @param features - The merged exoplanet features for prediction
+ * @returns Prediction response with confidence score (prediction is 0 or 1)
+ */
+export async function predictMergedStackingLogReg(
+  features: MergedInferenceFeatures
+): Promise<MergedPredictionResponse> {
+  const url = `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.mergedStackingLogReg}`;
+
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(features),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(
+        errorData.detail || `API request failed with status ${response.status}`
+      );
+    }
+
+    const data: MergedPredictionResponse = await response.json();
+    return data;
+  } catch (error) {
+    if (error instanceof Error) {
+      throw new Error(`Failed to get prediction: ${error.message}`);
+    }
+    throw new Error('Failed to get prediction: Unknown error');
+  }
+}
+
+/**
+ * Download the Merged dataset CSV file
+ * @returns Blob of the CSV file
+ */
+export async function downloadMergedDataset(): Promise<Blob> {
+  const url = `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.mergedDataset}`;
 
   try {
     const response = await fetch(url);

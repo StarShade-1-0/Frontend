@@ -17,7 +17,10 @@ import {
   K2PredictionResponse,
   predictKeplerVotingSoft,
   KeplerInferenceFeatures,
-  KeplerPredictionResponse
+  KeplerPredictionResponse,
+  predictMergedStackingLogReg,
+  MergedInferenceFeatures,
+  MergedPredictionResponse
 } from '@/lib/api-service';
 import { Rocket, Sparkles, ArrowRight, Info, AlertCircle, CheckCircle2, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
@@ -34,7 +37,7 @@ export default function PredictPage() {
   const [submitting, setSubmitting] = useState(false);
   const [selectedModel, setSelectedModel] = useState<string>('model1');
   const [predictionError, setPredictionError] = useState<string | null>(null);
-  const [predictionResult, setPredictionResult] = useState<K2PredictionResponse | KeplerPredictionResponse | null>(null);
+  const [predictionResult, setPredictionResult] = useState<K2PredictionResponse | KeplerPredictionResponse | MergedPredictionResponse | null>(null);
   
   // Separate form data for each model
   const [model1Data, setModel1Data] = useState({
@@ -117,16 +120,23 @@ export default function PredictPage() {
 
   const [model3Data, setModel3Data] = useState({
     planet_name: '',
-    param1: '',
-    param2: '',
-    param3: '',
-    param4: '',
-    param5: '',
-    param6: '',
-    param7: '',
-    param8: '',
-    param9: '',
-    param10: '',
+    orbital_period: '',
+    transit_duration: '',
+    transit_duration_err1: '',
+    transit_duration_err2: '',
+    transit_depth: '',
+    transit_depth_err1: '',
+    transit_depth_err2: '',
+    planet_radius: '',
+    planet_radius_err1: '',
+    planet_radius_err2: '',
+    equi_temp: '',
+    stellar_temp: '',
+    stellar_temp_err1: '',
+    stellar_temp_err2: '',
+    stellar_radius: '',
+    stellar_radius_err1: '',
+    stellar_radius_err2: '',
     notes: '',
   });
 
@@ -142,12 +152,16 @@ export default function PredictPage() {
     setPredictionError(null);
     setPredictionResult(null);
 
+    console.log('🎯 Selected Model:', selectedModel);
+
     try {
       // Get current model data
       const currentData = selectedModel === 'model1' ? model1Data : 
                          selectedModel === 'model2' ? model2Data : model3Data;
 
-      // Only Model 1 is connected to the backend API (K2 Stacking RF)
+      console.log('📝 Current Data:', currentData);
+
+      // All three models are connected to the backend API
       if (selectedModel === 'model1') {
         // Validate that all required numeric fields are filled
         const numericFields: (keyof typeof model1Data)[] = [
@@ -310,17 +324,96 @@ export default function PredictPage() {
         });
 
         if (dbError) {
-          console.error('Database error:', dbError);
+          // console.error('Database error:', dbError);
           // Don't throw - we still got the prediction, just log the error
           toast.warning('Prediction successful but failed to save to history');
         }
         
         const confidenceText = apiResponse.confidence !== null ? ` (${(apiResponse.confidence * 100).toFixed(1)}% confidence)` : '';
         toast.success(`Prediction completed! Result: ${apiResponse.prediction}${confidenceText}`);
+      } else if (selectedModel === 'model3') {
+        // Model 3: Merged Stacking Logistic Regression
+        console.log('🚀 Model 3 selected - Starting prediction...');
+        
+        // Validate that all required numeric fields are filled
+        const numericFields: (keyof typeof model3Data)[] = [
+          'orbital_period', 'transit_duration', 'transit_duration_err1', 'transit_duration_err2',
+          'transit_depth', 'transit_depth_err1', 'transit_depth_err2',
+          'planet_radius', 'planet_radius_err1', 'planet_radius_err2',
+          'equi_temp', 'stellar_temp', 'stellar_temp_err1', 'stellar_temp_err2',
+          'stellar_radius', 'stellar_radius_err1', 'stellar_radius_err2'
+        ];
+
+        // Check if any required field is empty
+        const missingFields = numericFields.filter(field => !model3Data[field]);
+        if (missingFields.length > 0) {
+          console.error('❌ Missing fields:', missingFields);
+          throw new Error('Please fill in all required parameters for Model 3');
+        }
+
+        console.log('✅ All fields validated');
+
+        // Prepare features for API call
+        const features: MergedInferenceFeatures = {
+          orbital_period: parseFloat(model3Data.orbital_period),
+          transit_duration: parseFloat(model3Data.transit_duration),
+          transit_duration_err1: parseFloat(model3Data.transit_duration_err1),
+          transit_duration_err2: parseFloat(model3Data.transit_duration_err2),
+          transit_depth: parseFloat(model3Data.transit_depth),
+          transit_depth_err1: parseFloat(model3Data.transit_depth_err1),
+          transit_depth_err2: parseFloat(model3Data.transit_depth_err2),
+          planet_radius: parseFloat(model3Data.planet_radius),
+          planet_radius_err1: parseFloat(model3Data.planet_radius_err1),
+          planet_radius_err2: parseFloat(model3Data.planet_radius_err2),
+          equi_temp: parseFloat(model3Data.equi_temp),
+          stellar_temp: parseFloat(model3Data.stellar_temp),
+          stellar_temp_err1: parseFloat(model3Data.stellar_temp_err1),
+          stellar_temp_err2: parseFloat(model3Data.stellar_temp_err2),
+          stellar_radius: parseFloat(model3Data.stellar_radius),
+          stellar_radius_err1: parseFloat(model3Data.stellar_radius_err1),
+          stellar_radius_err2: parseFloat(model3Data.stellar_radius_err2),
+        };
+
+        console.log('📊 Prepared features:', features);
+
+        // Call the backend API
+        console.log('🌐 Calling backend API...');
+        const apiResponse = await predictMergedStackingLogReg(features);
+        console.log('📥 API Response:', apiResponse);
+        
+        // Store the result to display
+        setPredictionResult(apiResponse);
+        
+        // Interpret binary prediction (0 = False Positive, 1 = Candidate)
+        const predictionLabel = apiResponse.prediction === 1 ? 'Candidate' : 'False Positive';
+        const isExoplanet = apiResponse.prediction === 1;
+        
+        console.log(`🎯 Prediction: ${predictionLabel} (${apiResponse.prediction})`);
+
+        const { error: dbError } = await supabase.from('predictions').insert({
+          user_id: user!.id,
+          planet_name: currentData.planet_name,
+          model_used: selectedModel,
+          prediction_result: predictionLabel,
+          confidence_score: apiResponse.confidence,
+          is_exoplanet: isExoplanet,
+          parameters: features,
+          notes: currentData.notes,
+        });
+
+        if (dbError) {
+          // console.error('Database error:', dbError);
+          // Don't throw - we still got the prediction, just log the error
+          toast.warning('Prediction successful but failed to save to history');
+        } else {
+          console.log('✅ Saved to database');
+        }
+        
+        const confidenceText = apiResponse.confidence !== null ? ` (${(apiResponse.confidence * 100).toFixed(1)}% confidence)` : '';
+        toast.success(`Prediction completed! Result: ${predictionLabel}${confidenceText}`);
       } else {
-        // Model 3 not yet connected - show message
-        toast.info('Model 3 is not yet connected to the backend.');
-        throw new Error('Model 3 is not yet implemented. Please select Model 1 or Model 2.');
+        // Invalid model selection
+        throw new Error(`Invalid model selected: ${selectedModel}. Please select Model 1, Model 2, or Model 3.`);
       }
     } catch (error: any) {
       console.error('Prediction error:', error);
@@ -905,7 +998,7 @@ export default function PredictPage() {
     },
   ];
 
-  // Field definitions for Model 3
+  // Field definitions for Model 3 - Merged Stacking Logistic Regression
   const model3Fields = [
     {
       id: 'planet_name',
@@ -915,85 +1008,161 @@ export default function PredictPage() {
       tooltip: 'A unique identifier for your planetary candidate',
       required: true,
     },
+    // Orbital & Transit Parameters
     {
-      id: 'param1',
-      label: 'Parameter 1',
+      id: 'orbital_period',
+      label: 'Orbital Period',
       type: 'number',
-      placeholder: 'Enter value',
-      tooltip: 'First parameter for Model 3',
-      step: '0.01',
+      placeholder: 'e.g., 385.5',
+      tooltip: 'Orbital period in days - time for one complete orbit around the star',
+      step: '0.0001',
+      category: 'Orbital & Transit',
     },
     {
-      id: 'param2',
-      label: 'Parameter 2',
+      id: 'transit_duration',
+      label: 'Transit Duration',
       type: 'number',
-      placeholder: 'Enter value',
-      tooltip: 'Second parameter for Model 3',
-      step: '0.01',
+      placeholder: 'e.g., 6.2',
+      tooltip: 'Transit duration in hours - how long the planet takes to cross the star',
+      step: '0.0001',
+      category: 'Orbital & Transit',
     },
     {
-      id: 'param3',
-      label: 'Parameter 3',
+      id: 'transit_duration_err1',
+      label: 'Transit Duration Error (+)',
       type: 'number',
-      placeholder: 'Enter value',
-      tooltip: 'Third parameter for Model 3',
-      step: '0.01',
+      placeholder: 'e.g., 0.05',
+      tooltip: 'Upper uncertainty in transit duration measurement',
+      step: '0.0001',
+      category: 'Orbital & Transit',
     },
     {
-      id: 'param4',
-      label: 'Parameter 4',
+      id: 'transit_duration_err2',
+      label: 'Transit Duration Error (-)',
       type: 'number',
-      placeholder: 'Enter value',
-      tooltip: 'Fourth parameter for Model 3',
-      step: '0.01',
+      placeholder: 'e.g., -0.05',
+      tooltip: 'Lower uncertainty in transit duration measurement',
+      step: '0.0001',
+      category: 'Orbital & Transit',
     },
     {
-      id: 'param5',
-      label: 'Parameter 5',
+      id: 'transit_depth',
+      label: 'Transit Depth',
       type: 'number',
-      placeholder: 'Enter value',
-      tooltip: 'Fifth parameter for Model 3',
-      step: '0.01',
+      placeholder: 'e.g., 0.0012',
+      tooltip: 'Transit depth in parts per million - how much light is blocked during transit',
+      step: '0.000001',
+      category: 'Orbital & Transit',
     },
     {
-      id: 'param6',
-      label: 'Parameter 6',
+      id: 'transit_depth_err1',
+      label: 'Transit Depth Error (+)',
       type: 'number',
-      placeholder: 'Enter value',
-      tooltip: 'Sixth parameter for Model 3',
-      step: '0.01',
+      placeholder: 'e.g., 0.00005',
+      tooltip: 'Upper uncertainty in transit depth measurement',
+      step: '0.000001',
+      category: 'Orbital & Transit',
     },
     {
-      id: 'param7',
-      label: 'Parameter 7',
+      id: 'transit_depth_err2',
+      label: 'Transit Depth Error (-)',
       type: 'number',
-      placeholder: 'Enter value',
-      tooltip: 'Seventh parameter for Model 3',
-      step: '0.01',
+      placeholder: 'e.g., -0.00005',
+      tooltip: 'Lower uncertainty in transit depth measurement',
+      step: '0.000001',
+      category: 'Orbital & Transit',
+    },
+    // Planetary Parameters
+    {
+      id: 'planet_radius',
+      label: 'Planet Radius',
+      type: 'number',
+      placeholder: 'e.g., 1.5',
+      tooltip: 'Planet radius in Earth radii',
+      step: '0.001',
+      category: 'Planetary',
     },
     {
-      id: 'param8',
-      label: 'Parameter 8',
+      id: 'planet_radius_err1',
+      label: 'Planet Radius Error (+)',
       type: 'number',
-      placeholder: 'Enter value',
-      tooltip: 'Eighth parameter for Model 3',
-      step: '0.01',
+      placeholder: 'e.g., 0.1',
+      tooltip: 'Upper uncertainty in planet radius',
+      step: '0.001',
+      category: 'Planetary',
     },
     {
-      id: 'param9',
-      label: 'Parameter 9',
+      id: 'planet_radius_err2',
+      label: 'Planet Radius Error (-)',
       type: 'number',
-      placeholder: 'Enter value',
-      tooltip: 'Ninth parameter for Model 3',
-      step: '0.01',
+      placeholder: 'e.g., -0.1',
+      tooltip: 'Lower uncertainty in planet radius',
+      step: '0.001',
+      category: 'Planetary',
     },
     {
-      id: 'param10',
-      label: 'Parameter 10',
+      id: 'equi_temp',
+      label: 'Equilibrium Temperature',
       type: 'number',
-      placeholder: 'Enter value',
-      tooltip: 'Tenth parameter for Model 3',
-      step: '0.01',
+      placeholder: 'e.g., 288',
+      tooltip: 'Equilibrium temperature in Kelvin - estimated surface temperature',
+      step: '0.1',
+      category: 'Planetary',
+    },
+    // Stellar Parameters
+    {
+      id: 'stellar_temp',
+      label: 'Stellar Temperature',
+      type: 'number',
+      placeholder: 'e.g., 5778',
+      tooltip: 'Stellar effective temperature in Kelvin',
+      step: '1',
+      category: 'Stellar',
+    },
+    {
+      id: 'stellar_temp_err1',
+      label: 'Stellar Temperature Error (+)',
+      type: 'number',
+      placeholder: 'e.g., 50',
+      tooltip: 'Upper uncertainty in stellar temperature',
+      step: '1',
+      category: 'Stellar',
+    },
+    {
+      id: 'stellar_temp_err2',
+      label: 'Stellar Temperature Error (-)',
+      type: 'number',
+      placeholder: 'e.g., -50',
+      tooltip: 'Lower uncertainty in stellar temperature',
+      step: '1',
+      category: 'Stellar',
+    },
+    {
+      id: 'stellar_radius',
+      label: 'Stellar Radius',
+      type: 'number',
+      placeholder: 'e.g., 1.0',
+      tooltip: 'Stellar radius in solar radii',
+      step: '0.001',
+      category: 'Stellar',
+    },
+    {
+      id: 'stellar_radius_err1',
+      label: 'Stellar Radius Error (+)',
+      type: 'number',
+      placeholder: 'e.g., 0.05',
+      tooltip: 'Upper uncertainty in stellar radius',
+      step: '0.001',
+      category: 'Stellar',
+    },
+    {
+      id: 'stellar_radius_err2',
+      label: 'Stellar Radius Error (-)',
+      type: 'number',
+      placeholder: 'e.g., -0.05',
+      tooltip: 'Lower uncertainty in stellar radius',
+      step: '0.001',
+      category: 'Stellar',
     },
   ];
 
@@ -1086,13 +1255,13 @@ export default function PredictPage() {
                   <SelectContent>
                     <SelectItem value="model1">Model 1 - K2 Stacking RF</SelectItem>
                     <SelectItem value="model2">Model 2 - Kepler Voting Soft</SelectItem>
-                    <SelectItem value="model3">Model 3 (Coming Soon)</SelectItem>
+                    <SelectItem value="model3">Model 3 - Merged Stacking LogReg</SelectItem>
                   </SelectContent>
                 </Select>
                 <p className="text-sm text-muted-foreground">
                   {selectedModel === 'model1' && 'Model 1: K2 Stacking Random Forest - Optimized for K2 mission transit and orbital parameters'}
                   {selectedModel === 'model2' && 'Model 2: Kepler Voting Soft - Comprehensive Kepler mission parameters with ensemble voting'}
-                  {selectedModel === 'model3' && 'Model 3: Experimental parameter set (Not yet connected)'}
+                  {selectedModel === 'model3' && 'Model 3: Merged Stacking Logistic Regression - Combined dataset with core exoplanet parameters'}
                 </p>
               </div>
 
@@ -1182,7 +1351,9 @@ export default function PredictPage() {
           <Card className="border-0 bg-white/95 backdrop-blur-md shadow-2xl mt-8">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                {predictionResult.prediction.toLowerCase() === 'confirmed' ? (
+                {(typeof predictionResult.prediction === 'string' 
+                    ? predictionResult.prediction.toLowerCase() === 'confirmed' || predictionResult.prediction.toLowerCase() === 'candidate'
+                    : predictionResult.prediction === 1) ? (
                   <CheckCircle2 className="h-6 w-6 text-green-500" />
                 ) : (
                   <XCircle className="h-6 w-6 text-red-500" />
@@ -1201,11 +1372,15 @@ export default function PredictPage() {
                     Classification
                   </div>
                   <div className={`text-4xl font-bold mb-2 ${
-                    predictionResult.prediction.toLowerCase() === 'confirmed' 
+                    (typeof predictionResult.prediction === 'string' 
+                      ? predictionResult.prediction.toLowerCase() === 'confirmed' || predictionResult.prediction.toLowerCase() === 'candidate'
+                      : predictionResult.prediction === 1)
                       ? 'text-green-600' 
                       : 'text-red-600'
                   }`}>
-                    {predictionResult.prediction.toUpperCase()}
+                    {typeof predictionResult.prediction === 'string' 
+                      ? predictionResult.prediction.toUpperCase()
+                      : predictionResult.prediction === 1 ? 'CANDIDATE' : 'FALSE POSITIVE'}
                   </div>
                   {predictionResult.confidence !== null && (
                     <div className="text-2xl font-semibold text-primary">
